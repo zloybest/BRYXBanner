@@ -63,7 +63,7 @@ open class Banner: UIView {
     open var position = BannerPosition.top
 
     /// How 'springy' the banner should display. Defaults to `.Slight`
-    open var springiness = BannerSpringiness.slight
+    open var springiness = BannerSpringiness.none
     
     /// The color of the text as well as the image tint color if `shouldTintImage` is `true`.
     @objc open var textColor = UIColor.white {
@@ -73,7 +73,7 @@ open class Banner: UIView {
     }
     
     /// The height of the banner. Default is 80.
-    @objc open var minimumHeight: CGFloat = 80
+    @objc open var minimumHeight: CGFloat = 100
     
     /// Whether or not the banner should show a shadow when presented.
     @objc open var hasShadows = true {
@@ -250,6 +250,7 @@ open class Banner: UIView {
         addConstraints(backgroundView.constraintsEqualToSuperview())
         backgroundView.backgroundColor = backgroundColor
         backgroundView.addSubview(contentView)
+
         labelView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(labelView)
         labelView.addSubview(titleLabel)
@@ -258,6 +259,7 @@ open class Banner: UIView {
         backgroundView.addConstraint(contentView.constraintWithAttribute(.bottom, .equal, to: .bottom, of: backgroundView))
         contentTopOffsetConstraint = contentView.constraintWithAttribute(.top, .equal, to: .top, of: backgroundView)
         backgroundView.addConstraint(contentTopOffsetConstraint)
+        
         let leftConstraintText: String
         if image == nil {
             leftConstraintText = "|"
@@ -274,7 +276,7 @@ open class Banner: UIView {
         contentView.addConstraints(NSLayoutConstraint.defaultConstraintsWithVisualFormat(constraintFormat, views: views))
         contentView.addConstraints(NSLayoutConstraint.defaultConstraintsWithVisualFormat("V:|-(>=1)-[labelView]-(>=1)-|", views: views))
         backgroundView.addConstraints(NSLayoutConstraint.defaultConstraintsWithVisualFormat("H:|[contentView]-(<=1)-[labelView]", options: .alignAllCenterY, views: views))
-        
+
         for view in [titleLabel, detailLabel] {
             let constraintFormat = "H:|[label]-(8)-|"
             contentView.addConstraints(NSLayoutConstraint.defaultConstraintsWithVisualFormat(constraintFormat, options: NSLayoutFormatOptions(), metrics: nil, views: ["label": view]))
@@ -339,19 +341,30 @@ open class Banner: UIView {
             print("[Banner]: Could not find view. Aborting.")
             return
         }
+
         view.addSubview(self)
+
         forceUpdates()
         let (damping, velocity) = self.springiness.springValues
         let oldStatusBarStyle = UIApplication.shared.statusBarStyle
         if adjustsStatusBarStyle {
           UIApplication.shared.setStatusBarStyle(preferredStatusBarStyle, animated: true)
         }
+        
+        let originalTransform = self.imageView.transform
+        let scaledTransform = originalTransform.scaledBy(x: 0.8, y: 0.8)
+        let scaledAndTranslatedTransform = scaledTransform.translatedBy(x: 0.0, y: 0.0)
+        UIView.animate(withDuration: 0.8, delay: 0, options: [.repeat, .autoreverse], animations: {
+//            self.imageView.alpha = 0.0;
+            self.imageView.transform = scaledAndTranslatedTransform
+        })
+
         UIView.animate(withDuration: animationDuration, delay: 0.0, usingSpringWithDamping: damping, initialSpringVelocity: velocity, options: .allowUserInteraction, animations: {
             self.bannerState = .showing
             }, completion: { finished in
                 guard let duration = duration else { return }
                 DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + DispatchTimeInterval.milliseconds(Int(1000.0 * duration))) {
-                    self.dismiss(self.adjustsStatusBarStyle ? oldStatusBarStyle : nil)
+//                    self.dismiss(self.adjustsStatusBarStyle ? oldStatusBarStyle : nil)
                 }
         })
     }
