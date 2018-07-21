@@ -364,7 +364,7 @@ open class Banner: UIView {
             }, completion: { finished in
                 guard let duration = duration else { return }
                 DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + DispatchTimeInterval.milliseconds(Int(1000.0 * duration))) {
-//                    self.dismiss(self.adjustsStatusBarStyle ? oldStatusBarStyle : nil)
+                   self.dismiss(self.adjustsStatusBarStyle ? oldStatusBarStyle : nil)
                 }
         })
     }
